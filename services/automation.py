@@ -11,8 +11,15 @@ import asyncio
 import time
 
 from common.mqtt import client_for, run_forever
-from common.topics import ALL_TELEMETRY, command_topic, envelope, parse
+from common.topics import (
+    ALL_TELEMETRY,
+    availability_topic,
+    command_topic,
+    envelope,
+    parse,
+)
 
+SERVICE = "automation"
 LIGHT = "light-living"
 TIMEOUT = 15  # Sekunden ohne Bewegung -> Licht aus
 
@@ -21,7 +28,8 @@ async def _run():
     last_motion = 0.0
     light_on = False
 
-    async with client_for("automation") as client:
+    async with client_for(SERVICE) as client:
+        await client.publish(availability_topic(SERVICE), b"online", qos=1, retain=True)
         await client.subscribe(ALL_TELEMETRY)
         print("[automation] Regel-Engine aktiv")
 

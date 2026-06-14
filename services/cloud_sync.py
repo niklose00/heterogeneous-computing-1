@@ -12,8 +12,9 @@ import os
 import sqlite3
 
 from common.mqtt import client_for, run_forever
-from common.topics import ALL_TELEMETRY, parse
+from common.topics import ALL_TELEMETRY, availability_topic, parse
 
+SERVICE = "cloud-sync"
 DB = os.environ.get("CLOUD_DB", "cloud.db")
 
 
@@ -29,7 +30,8 @@ def _init() -> sqlite3.Connection:
 
 async def _run():
     con = _init()
-    async with client_for("cloud-sync") as client:
+    async with client_for(SERVICE) as client:
+        await client.publish(availability_topic(SERVICE), b"online", qos=1, retain=True)
         await client.subscribe(ALL_TELEMETRY)
         print(f"[cloud] Aggregation aktiv -> {DB}")
         async for msg in client.messages:

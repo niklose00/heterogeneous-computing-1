@@ -65,7 +65,7 @@ async def _commands(client, http):
 
 
 async def _run():
-    async with client_for(f"adapter-{DEVICE}") as client, httpx.AsyncClient(timeout=5) as http:
+    async with client_for(DEVICE) as client, httpx.AsyncClient(timeout=5) as http:
         await client.publish(availability_topic(DEVICE), b"online", qos=1, retain=True)
         print(f"[adapter] aktiv: {DEVICE} <-> {REST_URL}")
         await asyncio.gather(_poll(client, http), _commands(client, http))
