@@ -1,36 +1,5 @@
-# Smart-Home-Demonstrator (Heterogeneous Computing, Übungsblatt 1 / 1b)
 
-Prototypischer Demonstrator einer modernen Smart-Home-Infrastruktur. Mehrere
-eigenständige Komponenten kommunizieren lose gekoppelt über einen MQTT-Broker.
-Physische Sensoren/Aktoren werden als Software-Mockups simuliert; ihr Verhalten
-wird rein rechnerisch erzeugt (deterministisches Modell, keine KI zur Laufzeit).
-
-Der ausführliche Ergebnisbericht steht in **[BERICHT.md](BERICHT.md)**.
-
-## Architektur auf einen Blick
-
-```
- simulierte Geräte                Bus                Backend-Dienste
- ┌────────────┐                                    ┌────────────────┐
- │ temp-living│──telemetry─┐                  ┌────▶│ automation     │
- │ motion-hall│──telemetry─┤   ┌──────────┐   │     │ (Regeln, Edge) │
- │ light-living◀──command──┼──▶│   MQTT   │───┼────▶│ cloud-sync     │
- └────────────┘            │   │  Broker  │   │     │ (SQLite)       │
- ┌────────────┐  HTTP      │   └──────────┘   └────▶│ dashboard      │
- │ plug-kitchen│◀─▶ adapter─┘                        └────────────────┘
- │ (REST only) │   (Protokoll-Übersetzung = Interoperabilität)
- └────────────┘
-```
-
-- **Geräte** (`devices/`): Temperatur- und Bewegungssensor (publizieren),
-  Smart-Lampe (Aktor, abonniert Kommandos).
-- **Fremdgerät + Adapter** (`rest_device/`): ein nur HTTP/JSON sprechender
-  Smart-Stecker und der Adapter, der ihn in den MQTT-Bus übersetzt.
-- **Dienste** (`services/`): Regel-Engine am Edge, Cloud-Aggregation in SQLite,
-  Live-Dashboard.
-- **Verträge** (`common/topics.py`): zentrale Topic- und Envelope-Definition.
-
-## Schnellstart (Docker, empfohlen)
+## Schnellstart (Docker)
 
 ```bash
 docker compose up --build
@@ -107,16 +76,8 @@ python -m rest_device.adapter &
 uvicorn services.dashboard:app --port 8000
 ```
 
-## Nachrichtenformat (Auszug)
 
-| Topic                               | Richtung        | Payload (JSON)                                   |
-|-------------------------------------|-----------------|--------------------------------------------------|
-| `home/telemetry/{id}/{metric}`      | Gerät → Bus     | `{ts, device_id, metric, value, unit}`           |
-| `home/command/{id}`                 | Bus → Aktor     | `{ts, command, params}`                          |
-| `home/state/{id}` (retained)        | Aktor → Bus     | `{ts, device_id, ...zustand}`                    |
-| `home/availability/{id}` (retained) | LWT             | `online` / `offline`                             |
-
-## Demo-Skript für den Vortrag (~10 min)
+## Demo-Skript für den Vortrag
 
 1. `docker compose up` – alle Container starten, Dashboard öffnen.
 2. Zeigen, wie Telemetrie live erscheint (Tageskurve der Temperatur).
